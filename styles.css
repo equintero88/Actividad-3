@@ -1,0 +1,124 @@
+:root{
+  --bg: #0a1020;
+  --panel: #0e1630cc; /* con alpha para glass */
+  --stroke: #203055;
+  --muted: #8793aa;
+  --text: #e7ecf5;
+  --accent: #67e8f9;
+  --accent-2: #60a5fa;
+  --danger: #ef4444;
+  --ok: #22c55e;
+  --shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial;
+}
+
+/* Fondo con gradiente sutil */
+body.bg{
+  margin:0; color:var(--text);
+  background:
+    radial-gradient(1200px 800px at -10% -20%, #0c1b3a 0%, transparent 60%),
+    radial-gradient(1000px 700px at 120% 10%, #0b2e3f 0%, transparent 65%),
+    radial-gradient(900px 700px at 60% 120%, #1a1f3a 0%, transparent 65%),
+    var(--bg);
+}
+
+/* Layout contenedor */
+.shell{ max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+.header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 16px; border-bottom:1px solid var(--stroke);
+  position: sticky; top:0; backdrop-filter: blur(10px);
+  background: #0a1020cc; /* glass */
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.logo{
+  width:40px; height:40px; border-radius:10px; display:grid; place-items:center;
+  background: conic-gradient(from 210deg at 50% 50%, var(--accent), var(--accent-2));
+  color:#04121c; font-weight:900; letter-spacing:.5px;
+  border:1px solid var(--stroke);
+}
+.header h1{ margin:0; font-size:18px; line-height:1.1; }
+.byline{ color:var(--muted); font-size:.9rem; }
+
+.nav{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.nav-link{
+  padding:8px 12px; border-radius:10px; border:1px solid var(--stroke);
+  background:#0f1833; color:var(--text); text-decoration:none;
+}
+.nav-link:hover{ background:#142049; }
+.btn{
+  padding:8px 12px; border-radius:10px; border:1px solid var(--stroke);
+  background:#0f1833; color:var(--text); cursor:pointer;
+}
+.btn:hover{ background:#142049; }
+.danger{ border-color:#5a1f1f; background:#2a0e0e; }
+.danger:hover{ background:#3a1313; }
+
+/* Main / cards */
+.main{ padding: 24px 0; }
+.card{
+  background: var(--panel); border:1px solid var(--stroke); border-radius:14px;
+  padding:20px; margin-bottom:16px; box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+}
+
+label{ display:block; margin:10px 0; }
+input{
+  width:100%; max-width:360px; padding:10px;
+  border-radius:10px; border:1px solid var(--stroke);
+  background:#0b1326; color:var(--text);
+}
+button{
+  padding:10px 14px; border-radius:10px; border:1px solid var(--stroke);
+  background:#0f1833; color:var(--text); cursor:pointer; font-weight:700;
+}
+button:hover{ background:#16224a; }
+button[disabled]{ opacity:.6; cursor:not-allowed; }
+
+.hint{ color:var(--muted); }
+.center{ text-align:center; }
+
+/* Mensajes */
+.msg{
+  margin-top:10px; padding:10px; border-radius:10px;
+  background:#0b1326; border:1px solid var(--stroke); min-height:1.2rem;
+  max-height:160px; overflow:auto;
+}
+.msg.success{ border-color: var(--ok); }
+.msg.error{ border-color: var(--danger); }
+
+/* Tabla y toolbar */
+.table{ width:100%; border-collapse:collapse; margin-top:10px; }
+.table th, .table td{ border-bottom:1px solid var(--stroke); padding:8px; text-align:left; }
+.table tbody tr:nth-child(odd){ background: rgba(255,255,255,.03); }
+
+.inline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+
+/* Perfil */
+.profile{ display:grid; gap:14px; }
+.profile-row{ display:flex; align-items:center; gap:12px; }
+.avatar{
+  width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
+  color:#04121c; font-weight:900;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border:1px solid var(--stroke);
+}
+.profile-username{ font-size:1.2rem; font-weight:800; }
+.profile-sub{ color:var(--muted); }
+.profile-stats{ display:grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+.stat{ background:#0b1326; border:1px solid var(--stroke); border-radius:12px; padding:12px; }
+.stat-label{ color:var(--muted); font-size:.85rem; }
+.stat-value{ font-size:1.6rem; font-weight:800; }
+
+/* Footer */
+.footer{
+  padding: 18px 16px; border-top:1px solid var(--stroke);
+  color:var(--muted); margin-top: 24px; background:#0a1020cc; backdrop-filter: blur(6px);
+}
+
+/* Ajuste fino de la barra en Puntajes (manteniendo tu comportamiento original) */
+#scoresForm{ display:flex; align-items:center; gap:12px; flex-wrap:nowrap; }
+#scoresForm input{ width:auto; min-width:180px; }
+#scoresForm button{ margin-left:6px; }

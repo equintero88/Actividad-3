@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SID · Auth & Scores (Manuela Buriticá Bedoya)</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>SID · Auth & Scores</h1>
+    <div class="byline">Manuela Buriticá Bedoya</div>
+    <nav class="nav">
+      <button data-view="login">Login</button>
+      <button data-view="register">Registro</button>
+      <button data-view="profile">Perfil</button>
+      <button data-view="leaderboard">Leaderboard</button>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="views">
+    <!-- LOGIN -->
+    <section id="view-login" class="view">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label>Username <input name="username" required /></label>
+        <label>Password <input name="password" type="password" required /></label>
+        <button type="submit">Ingresar</button>
+      </form>
+      <div class="msg" id="loginMsg"></div>
+    </section>
+
+    <!-- REGISTRO -->
+    <section id="view-register" class="view hidden">
+      <h2>Registro</h2>
+      <form id="registerForm">
+        <label>Username <input name="username" required /></label>
+        <label>Password <input name="password" type="password" required /></label>
+        <button type="submit">Crear cuenta</button>
+      </form>
+      <div class="msg" id="registerMsg"></div>
+    </section>
+
+    <!-- PERFIL -->
+    <section id="view-profile" class="view hidden">
+      <h2>Perfil</h2>
+      <div id="profileBox"></div>
+      <h3>Actualizar puntaje</h3>
+      <form id="scoreForm">
+        <label>Nuevo score <input name="score" type="number" min="0" step="1" required /></label>
+        <button type="submit">Guardar</button>
+      </form>
+      <div class="msg" id="profileMsg"></div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="view-leaderboard" class="view hidden">
+      <h2>Leaderboard</h2>
+      <div class="controls">
+        <label>Límite <input id="lbLimit" type="number" value="20" min="1" /></label>
+        <button id="reloadLb">Recargar</button>
+      </div>
+      <table id="lbTable">
+        <thead><tr><th>#</th><th>Usuario</th><th>Score</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="msg" id="lbMsg"></div>
+    </section>
+  </main>
+
+  <script src="./js/api.js" defer></script>
+  <script src="./js/state.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
