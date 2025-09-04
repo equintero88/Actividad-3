@@ -1,167 +1,167 @@
-import { apiRegister, apiLogin, apiGetProfile, apiPatchUser, apiListUsers } from './api.js';
-import { auth } from './state.js';
+import { saveSession, clearSession, getToken, getUsername, isAuthenticated } from './state.js';
+import { register, login, getProfile, updateData, listUsers } from './api.js';
 
-const views = {
-  login: document.getElementById('view-login'),
-  register: document.getElementById('view-register'),
-  profile: document.getElementById('view-profile'),
-  leaderboard: document.getElementById('view-leaderboard'),
-};
+const $ = (sel) => document.querySelector(sel);
 
-function show(viewName) {
-  Object.values(views).forEach(v => v.classList.add('hidden'));
-  views[viewName].classList.remove('hidden');
+// --- Vistas ---
+function showAuth() { $('#view-auth')?.classList.remove('is-hidden'); $('#view-dashboard')?.classList.add('is-hidden'); }
+function showDash() { $('#view-dashboard')?.classList.remove('is-hidden'); $('#view-auth')?.classList.add('is-hidden'); }
+
+function switchAuthTab(which) {
+  const isLogin = which === 'login';
+  $('#tab-login')?.classList.toggle('is-active', isLogin);
+  $('#tab-register')?.classList.toggle('is-active', !isLogin);
+  $('#form-login')?.classList.toggle('is-active', isLogin);
+  $('#form-register')?.classList.toggle('is-active', !isLogin);
 }
 
-function setMsg(id, text, ok = false) {
-  const el = document.getElementById(id);
-  el.textContent = text || '';
-  el.style.color = ok ? 'green' : 'crimson';
+// --- Perfil / UI ---
+function initialsFrom(name) {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/[\s._-]+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+function renderProfile(usuario) {
+  const name  = usuario?.username ?? '—';
+  const score = usuario?.data?.score ?? 0;
+  $('#profile-avatar').textContent  = initialsFrom(name);
+  $('#profile-username').textContent= name;
+  $('#profile-score').textContent   = String(score);
 }
 
-function requireAuthOrGoLogin(targetViewIfOk = 'profile') {
-  if (!auth.isAuth()) {
-    show('login');
-    return false;
-  }
-  show(targetViewIfOk);
-  return true;
-}
-
-// Nav buttons
-document.querySelectorAll('nav [data-view]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const name = btn.getAttribute('data-view');
-    if (name === 'profile' || name === 'leaderboard') {
-      if (!requireAuthOrGoLogin(name)) return;
-      if (name === 'profile') loadProfile();
-      if (name === 'leaderboard') loadLeaderboard();
-    } else {
-      show(name);
-    }
-  });
-});
-
-// Logout
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  auth.clear();
-  show('login');
-});
-
-// Registro
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  setMsg('registerMsg', '');
-  const fd = new FormData(e.target);
-  const username = fd.get('username').trim();
-  const password = fd.get('password');
-
+// --- Leaderboard ---
+async function reloadLeaderboard() {
   try {
-    const data = await apiRegister(username, password);
-    setMsg('registerMsg', `Usuario creado: ${data?.usuario?.username || username}`, true);
-    // opcional: ir a login con el username precargado
-  } catch (err) {
-    setMsg('registerMsg', err.message);
-  }
-});
-
-// Login
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  setMsg('loginMsg', '');
-  const fd = new FormData(e.target);
-  const username = fd.get('username').trim();
-  const password = fd.get('password');
-
-  try {
-    const { usuario, token } = await apiLogin(username, password);
-    auth.username = usuario?.username || username;
-    auth.token = token;
-    setMsg('loginMsg', 'Login exitoso', true);
-    show('profile');
-    loadProfile();
-  } catch (err) {
-    setMsg('loginMsg', err.message);
-  }
-});
-
-// Cargar perfil
-async function loadProfile() {
-  const box = document.getElementById('profileBox');
-  const msgId = 'profileMsg';
-  setMsg(msgId, '');
-  box.textContent = 'Cargando...';
-
-  try {
-    const data = await apiGetProfile(auth.username, auth.token);
-    const u = data?.usuario || {};
-    box.innerHTML = `
-      <p><strong>Usuario:</strong> ${u.username || auth.username}</p>
-      <p><strong>Score:</strong> ${u.score ?? 0}</p>
-      <p><strong>UID:</strong> ${u.uid ?? '-'}</p>
-      <p><strong>State:</strong> ${u.state ?? '-'}</p>
-    `;
-    setMsg(msgId, 'Perfil cargado', true);
-  } catch (err) {
-    setMsg(msgId, err.message);
-    if (err.status === 401) {
-      auth.clear();
-      show('login');
-    }
-  }
-}
-
-// Actualizar score
-document.getElementById('scoreForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const score = Number(fd.get('score'));
-  try {
-    const resp = await apiPatchUser(auth.username, { score }, auth.token);
-    setMsg('profileMsg', 'Score actualizado', true);
-    loadProfile();
-    e.target.reset();
-  } catch (err) {
-    setMsg('profileMsg', err.message);
-    if (err.status === 401) {
-      auth.clear();
-      show('login');
-    }
-  }
-});
-
-// Leaderboard
-async function loadLeaderboard() {
-  const tbody = document.querySelector('#lbTable tbody');
-  const limit = Number(document.getElementById('lbLimit').value || 20);
-  setMsg('lbMsg', '');
-  tbody.innerHTML = '<tr><td colspan="3">Cargando...</td></tr>';
-  try {
-    const { usuarios = [] } = await apiListUsers({ limit, skip: 0, sort: true }, auth.token);
+    const limit = Number($('#lb-limit')?.value || 20);
+    const skip  = Number($('#lb-skip')?.value || 0);
+    const { usuarios = [] } = await listUsers({ limit, skip, sort: true }, getToken());
+    const tbody = $('#table-lb tbody');
     tbody.innerHTML = '';
     usuarios
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)) // por si el backend no ordena
+      .sort((a,b) => (b?.data?.score ?? 0) - (a?.data?.score ?? 0))
       .forEach((u, i) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${i + 1}</td><td>${u.username}</td><td>${u.score ?? 0}</td>`;
+        if (u.username === getUsername()) tr.classList.add('me');
+        tr.innerHTML = `<td>${i + 1 + skip}</td><td>${u.username}</td><td>${u?.data?.score ?? 0}</td>`;
         tbody.appendChild(tr);
       });
-    setMsg('lbMsg', 'OK', true);
   } catch (err) {
-    tbody.innerHTML = '';
-    setMsg('lbMsg', err.message);
-    if (err.status === 401) {
-      auth.clear();
-      show('login');
-    }
+    console.error('Error leaderboard:', err);
   }
 }
-document.getElementById('reloadLb').addEventListener('click', () => requireAuthOrGoLogin('leaderboard') && loadLeaderboard());
 
-// Estado inicial
-if (auth.isAuth()) {
-  show('profile');
-  loadProfile();
+// --- Restaurar sesión ---
+async function tryRestoreSession() {
+  if (!isAuthenticated() || !getUsername()) {
+    showAuth(); switchAuthTab('login'); return;
+  }
+  try {
+    const res = await getProfile(getUsername(), getToken());
+    const usuario = res?.usuario || res;
+    renderProfile(usuario);
+    showDash();
+    await reloadLeaderboard();
+  } catch (err) {
+    console.error('No se pudo restaurar sesión:', err);
+    clearSession();
+    showAuth(); switchAuthTab('login');
+  }
+}
+
+// --- Listeners ---
+function bindAuthTabs() {
+  $('#tab-login')?.addEventListener('click', () => switchAuthTab('login'));
+  $('#tab-register')?.addEventListener('click', () => switchAuthTab('register'));
+}
+
+function bindForms() {
+  // Registro
+  $('#form-register')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const msg = $('#msg-register');
+    const btn = f.querySelector('button[type="submit"]');
+
+    const u = f.username.value.trim();
+    const p = f.password.value;
+    if (!u || !p) { msg.textContent = 'Completa usuario y contraseña.'; return; }
+
+    btn.disabled = true; msg.textContent = 'Creando...';
+    try {
+      await register(u, p);
+      msg.textContent = 'Usuario creado. Ahora inicia sesión.';
+      f.reset(); switchAuthTab('login');
+    } catch (err) {
+      msg.textContent = err?.message || 'Error al registrar.';
+    } finally { btn.disabled = false; }
+  });
+
+  // Login
+  $('#form-login')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const msg = $('#msg-login');
+    const btn = f.querySelector('button[type="submit"]');
+
+    const u = f.username.value.trim();
+    const p = f.password.value;
+    if (!u || !p) { msg.textContent = 'Completa usuario y contraseña.'; return; }
+
+    btn.disabled = true; msg.textContent = 'Autenticando...';
+    try {
+      const { usuario, token } = await login(u, p);
+      saveSession({ token, username: usuario?.username || u });
+      msg.textContent = '';
+      await tryRestoreSession();
+    } catch (err) {
+      msg.textContent = err?.message || 'No se pudo iniciar sesión.';
+    } finally { btn.disabled = false; }
+  });
+
+  // Logout
+  $('#btn-logout')?.addEventListener('click', () => {
+    clearSession();
+    document.getElementById('form-login')?.reset();
+    document.getElementById('form-register')?.reset();
+    showAuth(); switchAuthTab('login');
+  });
+
+  // Actualizar score
+  $('#form-score')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const msg = $('#msg-score');
+    const n = parseInt(f.score.value, 10);
+    if (!Number.isFinite(n) || n < 0) { msg.textContent = 'Ingresa un número válido.'; return; }
+
+    msg.textContent = 'Guardando...';
+    try {
+      await updateData(getUsername(), { score: n }, getToken());
+      const res = await getProfile(getUsername(), getToken());
+      renderProfile(res?.usuario || res);
+      msg.textContent = 'Score actualizado.';
+      await reloadLeaderboard();
+    } catch (err) {
+      msg.textContent = err?.message || 'No se pudo actualizar.';
+    }
+  });
+
+  // Recargar leaderboard
+  $('#btn-reload-lb')?.addEventListener('click', reloadLeaderboard);
+}
+
+// --- Init ---
+function init() {
+  showAuth();
+  switchAuthTab('login');
+  bindAuthTabs();
+  bindForms();
+  tryRestoreSession();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
 } else {
-  show('login');
+  init();
 }
