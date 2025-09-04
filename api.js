@@ -12,56 +12,41 @@ async function http(path, { method = 'GET', token, body } = {}) {
   });
 
   const text = await res.text();
-  let data;
-  try { data = text ? JSON.parse(text) : {}; }
-  catch { data = { raw: text }; }
-
+  let data; try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
   if (!res.ok) {
     const err = new Error(data?.msg || `HTTP ${res.status}`);
-    err.status = res.status;
-    err.data = data;
-    throw err;
+    err.status = res.status; err.data = data; throw err;
   }
   return data;
 }
 
 // 1) Registro
-export function apiRegister(username, password) {
-  return http('/api/usuarios', {
-    method: 'POST',
-    body: { username, password },
-  });
+export function register(username, password) {
+  return http('/api/usuarios', { method: 'POST', body: { username, password } });
 }
 
-// 2) Login
-export function apiLogin(username, password) {
-  return http('/api/auth/login', {
-    method: 'POST',
-    body: { username, password },
-  });
+// 2) Autenticación
+export function login(username, password) {
+  return http('/api/auth/login', { method: 'POST', body: { username, password } });
 }
 
-// 3) Obtener perfil (requiere token)
-export function apiGetProfile(username, token) {
+// 3) Obtener perfil
+export function getProfile(username, token) {
   const q = new URLSearchParams({ username });
-  return http(`/api/usuarios?${q.toString()}`, { token });
+  return http('/api/usuarios?' + q.toString(), { token });
 }
 
-// 4) Actualizar data (por ejemplo score)
-export function apiPatchUser(username, data, token) {
-  return http('/api/usuarios', {
-    method: 'PATCH',
-    token,
-    body: { username, data },
-  });
+// 4) Actualizar data
+export function updateData(username, data, token) {
+  return http('/api/usuarios', { method: 'PATCH', token, body: { username, data } });
 }
 
-// 5) Listar usuarios (leaderboard)
-export function apiListUsers({ limit = 20, skip = 0, sort = true } = {}, token) {
-  const q = new URLSearchParams({
-    limit: String(limit),
-    skip: String(skip),
-    sort: String(!!sort),
-  });
-  return http(`/api/usuarios?${q.toString()}`, { token });
+// 5) Listar usuarios
+export function listUsers({ limit, skip, sort } = {}, token) {
+  const q = new URLSearchParams();
+  if (limit != null) q.set('limit', String(limit));
+  if (skip != null) q.set('skip', String(skip));
+  if (sort != null) q.set('sort', String(!!sort));
+  const qs = q.toString();
+  return http('/api/usuarios' + (qs ? '?' + qs : ''), { token });
 }
