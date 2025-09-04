@@ -1,10 +1,13 @@
-export const auth = {
-  get token() { return localStorage.getItem('sid_token') || ''; },
-  set token(v) { v ? localStorage.setItem('sid_token', v) : localStorage.removeItem('sid_token'); },
+const STORAGE_KEYS = { token: 'sid_token', username: 'sid_username' };
 
-  get username() { return localStorage.getItem('sid_username') || ''; },
-  set username(v) { v ? localStorage.setItem('sid_username', v) : localStorage.removeItem('sid_username'); },
-
-  isAuth() { return !!this.token && !!this.username; },
-  clear() { this.token = ''; this.username = ''; },
-};
+export function saveSession({ token, username }) {
+  localStorage.setItem(STORAGE_KEYS.token, token);
+  localStorage.setItem(STORAGE_KEYS.username, username);
+}
+export function clearSession() {
+  localStorage.removeItem(STORAGE_KEYS.token);
+  localStorage.removeItem(STORAGE_KEYS.username);
+}
+export function getToken() { return localStorage.getItem(STORAGE_KEYS.token) || ''; }
+export function getUsername() { return localStorage.getItem(STORAGE_KEYS.username) || ''; }
+export function isAuthenticated() { return Boolean(getToken()); }
